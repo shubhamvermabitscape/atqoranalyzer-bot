@@ -1,9 +1,9 @@
 from botbuilder.core import ActivityHandler, TurnContext
 from botbuilder.schema import ChannelAccount
-from config import DefaultConfig
 from openai import AzureOpenAI
 from azure.core.credentials import AzureKeyCredential
 from azure.search.documents import SearchClient   
+from config import DefaultConfig
 from queue import Queue
 from threading import Thread
 
@@ -27,7 +27,7 @@ class MyBot(ActivityHandler):
         search_url = f"https://{CONFIG.SEARCH_SERVICE_NAME}.search.windows.net/"
         search_client = SearchClient(endpoint=search_url, index_name=index_name, credential=self.credential)
     
-        results = search_client.search(search_text=query, top=1)  
+        results = search_client.search(search_text=query, top=5)  
     
         content = []
         for result in results:
@@ -55,7 +55,7 @@ class MyBot(ActivityHandler):
     
     def generate_response_with_azure_openai(self, user_query, search_result):
         message_text = [
-            {"role": "system", "content": "The following is a query from a user and the results fetched from Azure's search indexes, and give page number also in rensponse."},
+            {"role": "system", "content": "The following is a query from a user and the results fetched from Azure's search indexes"},
             {"role": "user", "content": user_query},
             {"role": "assistant", "content": search_result}
         ]
@@ -74,9 +74,9 @@ class MyBot(ActivityHandler):
 
     async def on_message_activity(self, turn_context: TurnContext):
         search_result = self.search_query_in_azure(turn_context.activity.text)
-        print(search_result)
         if search_result:
             response = self.generate_response_with_azure_openai(turn_context.activity.text, search_result)
+            print(response)
             if response:
                 await turn_context.send_activity(response)
 
