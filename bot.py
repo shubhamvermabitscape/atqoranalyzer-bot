@@ -61,7 +61,7 @@ class MyBot(ActivityHandler):
         ]
     
         completion = self.client.chat.completions.create(
-            model="gpt-4-turbo",
+            model=CONFIG.AZURE_OPEN_AI_MODEL_NAME,
             messages=message_text,
             temperature=0.7,
             max_tokens=4096,
@@ -72,14 +72,6 @@ class MyBot(ActivityHandler):
         )
         return completion.choices[0].message.content if completion.choices else "Sorry, I couldn't generate a response."
 
-    async def on_message_activity(self, turn_context: TurnContext):
-        search_result = self.search_query_in_azure(turn_context.activity.text)
-        if search_result:
-            response = self.generate_response_with_azure_openai(turn_context.activity.text, search_result)
-            print(response)
-            if response:
-                await turn_context.send_activity(response)
-
     async def on_members_added_activity(
         self,
         members_added: [ChannelAccount],
@@ -88,4 +80,12 @@ class MyBot(ActivityHandler):
         for member_added in members_added:
             if member_added.id != turn_context.activity.recipient.id:
                 await turn_context.send_activity("Hello and welcome!")
+
+    async def on_message_activity(self, turn_context: TurnContext):
+        search_result = self.search_query_in_azure(turn_context.activity.text)
+        if search_result:
+            response = self.generate_response_with_azure_openai(turn_context.activity.text, search_result)
+            print(response)
+            if response:
+                await turn_context.send_activity(response)
 
